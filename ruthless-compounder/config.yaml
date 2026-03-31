@@ -1,0 +1,106 @@
+# ============================================================
+# RuthlessCompounder — Master Configuration
+# ============================================================
+
+mode: testnet  # "testnet" or "mainnet"
+
+# --- Schedule ---
+schedule:
+  daily_compound_hour_utc: 0        # 00:00 UTC
+  risk_sentinel_interval_min: 5     # every 5 minutes
+
+# --- Transaction Budget ---
+tx_budget:
+  max_annual_transactions: 295000   # hard cap (safety margin below 500k)
+  warn_threshold_pct: 80            # warn at 80% utilization
+  budget_year_start_month: 1        # January = fiscal year start
+
+# --- Portfolio Allocation (must sum to 100) ---
+allocation:
+  solana_yield_pct: 45              # Kamino + Meteora
+  evm_yield_pct: 40                 # Curve + Convex
+  trading_sleeve_pct: 15            # perps (set 0 to disable)
+
+# --- Solana Protocols ---
+solana:
+  kamino:
+    enabled: true
+    multiply_strategies:
+      - name: "SOL-USDC Multiply"
+        market: "SOL"
+        max_leverage: 3.0
+        min_apy_threshold: 8.0
+  meteora:
+    enabled: true
+    dlmm_vaults:
+      - name: "SOL-USDC DLMM"
+        pair: "SOL/USDC"
+        bin_step: 10
+        min_apy_threshold: 12.0
+  rpc_endpoints:
+    - https://api.devnet.solana.com        # testnet
+    # - https://api.mainnet-beta.solana.com  # mainnet (uncomment for prod)
+  priority_fee_microlamports: 50000        # priority fee per CU
+
+# --- EVM Chains ---
+evm:
+  chains:
+    base:
+      chain_id: 8453
+      rpc: ${BASE_RPC_URL}
+      curve_pools:
+        - name: "USDC-USDbC"
+          min_apy: 3.0
+      convex_enabled: false                # Convex on Base not yet live
+    arbitrum:
+      chain_id: 42161
+      rpc: ${ARBITRUM_RPC_URL}
+      curve_pools:
+        - name: "2CRV"
+          min_apy: 4.0
+        - name: "tricrypto"
+          min_apy: 6.0
+      convex_enabled: true
+  gas_limit_gwei: 0.1                     # max gas price for L2 txs
+  slippage_bps: 50                         # 0.5%
+
+# --- Trading Sleeve (Perps) ---
+trading_sleeve:
+  enabled: true
+  max_leverage: 5.0
+  risk_per_trade_pct: 2.0                  # max 2% of sleeve capital per trade
+  daily_stop_loss_pct: 8.0                 # halt sleeve if 8% daily loss
+  platforms:
+    - drift                                 # Solana perps
+    - jupiter_perps                         # Jupiter perps
+  allowed_pairs:
+    - SOL-PERP
+    - ETH-PERP
+    - BTC-PERP
+
+# --- Risk Sentinel Thresholds ---
+risk:
+  health_factor_min: 1.30                  # emergency exit below this
+  yield_crash_pct: 50                      # exit if yield drops >50% in 1h
+  max_drawdown_pct: 15                     # pause all activity
+  depeg_threshold_pct: 2.0                 # stablecoin depeg alert
+  oracle_staleness_sec: 120                # stale oracle = danger
+
+# --- LLM Decision Engine ---
+llm:
+  provider: ollama                         # ollama or vllm
+  model: qwen2.5:72b-instruct-q4_K_M
+  temperature: 0.1
+  max_tokens: 4096
+  system_prompt: |
+    You are RuthlessCompounder, an autonomous DeFi yield optimization agent.
+    You analyze on-chain yields, risk metrics, and market conditions.
+    You output JSON decisions for portfolio rebalancing.
+    Be conservative. Prioritize capital preservation over yield chasing.
+    Never exceed configured leverage limits.
+
+# --- Security ---
+security:
+  require_encrypted_keys: true
+  max_single_tx_value_usd: 10000          # refuse tx > $10k without confirmation
+  emergency_pause_file: /tmp/ruthless_pause # touch this file to pause everything
