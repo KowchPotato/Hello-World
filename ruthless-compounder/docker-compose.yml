@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  # --- Ollama LLM Server (GPU) ---
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ruthless-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # --- Main Agent ---
+  agent:
+    build: .
+    container_name: ruthless-agent
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config.yaml:/app/config.yaml:ro
+      - /tmp/ruthless_pause:/tmp/ruthless_pause
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # --- Streamlit Dashboard ---
+  dashboard:
+    build: .
+    container_name: ruthless-dashboard
+    restart: unless-stopped
+    depends_on:
+      - agent
+    env_file: .env
+    command: ["python", "-m", "streamlit", "run", "dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data:ro
+      - ./logs:/app/logs:ro
+      - ./config.yaml:/app/config.yaml:ro
+
+volumes:
+  ollama_data:

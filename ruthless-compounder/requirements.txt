@@ -1,0 +1,49 @@
+# RuthlessCompounder Dependencies
+# Python 3.12+
+
+# --- Core ---
+apscheduler>=3.10,<4.0
+python-dotenv>=1.0
+pyyaml>=6.0
+requests>=2.31
+aiohttp>=3.9
+asyncio-throttle>=1.0
+
+# --- Solana ---
+solana>=0.34
+solders>=0.21
+anchorpy>=0.20
+base58>=2.1
+
+# --- EVM ---
+web3>=6.15
+# web3-ethereum-defi is imported as 'eth_defi'
+eth-defi>=0.25
+
+# --- LLM / Agent ---
+langchain>=0.2
+langgraph>=0.2
+langchain-community>=0.2
+ollama>=0.3
+
+# --- Data & Compute ---
+pandas>=2.2
+numpy>=1.26
+cupy-cuda12x>=13.0; platform_machine == "x86_64"
+numba>=0.59
+
+# --- Dashboard ---
+streamlit>=1.38
+plotly>=5.22
+
+# --- Security ---
+cryptography>=42.0
+
+# --- Database ---
+# sqlite3 is in stdlib
+
+# --- Logging ---
+structlog>=24.1
+
+# --- Alerts (optional) ---
+python-telegram-bot>=21.0

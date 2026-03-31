@@ -1,0 +1,28 @@
+# Runtime data
+data/history.db
+data/*.db
+logs/*.log
+
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pause file
+/tmp/ruthless_pause
